@@ -67,46 +67,26 @@ public:
   void draw() override { tmp[1] = 101; }
 };
 
+int SIZE = 100000;
+int REPS = 3001;
 
-// -----------------------------------------------------------------------------
-int main() {
+void conceptVersion() {
   std::random_device randomDevice;
   std::mt19937_64 gen(randomDevice());
   std::bernoulli_distribution distribution(0.5);
-
-  int SIZE = 100000;
-
-//  ObjectCollection collection;
-//  for (int index = 0; index < 100000; ++index) {
-//    if(distribution(gen)) {
-//      collection.addObject(MyClass());
-//    } else {
-//      collection.addObject(MyOtherClass());
-//    } 
-//  }
-
-  std::vector<BaseClass *> collection(SIZE);
+  ObjectCollection collection;
   for (int index = 0; index < SIZE; ++index) {
     if(distribution(gen)) {
-      auto x = new FirstClass();
-      collection.push_back(x);
+      collection.addObject(MyClass());
     } else {
-      auto x = new SecondClass();
-      collection.push_back(x);
+      collection.addObject(MyOtherClass());
     } 
   }
-
-  collection[0]->draw();
-
   std::vector<long long int> times;
 
-  for (int rep = 0; rep < 1001; ++rep) {
+  for (int rep = 0; rep < REPS; ++rep) {
     auto startTime = HighResolutionClock::now();
-    for (auto x : collection) {
-      assert(x != NULL);
-      x->draw();
-    }
-//    collection.draw();
+    collection.draw();
     auto endTime = HighResolutionClock::now();
     auto duration =
         std::chrono::duration_cast<nanoseconds>(endTime - startTime);
@@ -114,7 +94,45 @@ int main() {
   }
 
   std::sort(times.begin(), times.end());
-  std::cout << "Min: " << *std::min_element(times.begin(), times.end()) << "\n";
-  std::cout << "Max: " << *std::max_element(times.begin(), times.end()) << "\n";
-  std::cout << "Time: " << times[times.size() / 2] << "\n";
+  std::cout << "Concept Time: " << times[times.size() / 2] << "\n";
+}
+
+void normalVersion() {
+  std::random_device randomDevice;
+  std::mt19937_64 gen(randomDevice());
+  std::bernoulli_distribution distribution(0.5);
+
+  std::vector<BaseClass *> collection(SIZE);
+  for (int index = 0; index < SIZE; ++index) {
+    if(distribution(gen)) {
+      auto x = new FirstClass();
+      collection[index] = x;
+    } else {
+      auto x = new SecondClass();
+      collection[index] = x;
+    } 
+  }
+
+  std::vector<long long int> times;
+
+  for (int rep = 0; rep < REPS; ++rep) {
+    auto startTime = HighResolutionClock::now();
+    for (auto x : collection) {
+      assert(x != NULL);
+      x->draw();
+    }
+    auto endTime = HighResolutionClock::now();
+    auto duration =
+        std::chrono::duration_cast<nanoseconds>(endTime - startTime);
+    times.push_back(duration.count());
+  }
+
+  std::sort(times.begin(), times.end());
+  std::cout << "Normal Time: " << times[times.size() / 2] << "\n";
+}
+
+// -----------------------------------------------------------------------------
+int main() {
+  conceptVersion();
+  normalVersion();
 }
