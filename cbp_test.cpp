@@ -13,41 +13,42 @@
 
 // Library
 
-template <typename type> void draw(const type &x) { 
-  std::cout << "Draw free function\n";
+template <typename T> void draw(const T &x) {
+  std::cout << "draw free function\n";
   std::cout << x << std::endl;
 }
 
+struct DrawableInterface {
+  virtual ~DrawableInterface() = default;
+  virtual void draw_() const = 0;
+};
+
+template <typename T> struct DrawableModel : DrawableInterface {
+  DrawableModel(T x) : data_(std::move(x)) {}
+  void draw_() const {
+    std::cout << "draw member function\n";
+    draw(data_);
+  }
+
+  T data_;
+};
+
 class object_t {
 public:
-  template <typename type>
-  object_t(type x)
-      : self_(std::make_shared<DrawableModel<type>>(std::move(x))) {}
+  template <typename T>
+  object_t(T x)
+      : self_(std::make_shared<DrawableModel<T>>(std::move(x))) {}
 
   friend void draw(const object_t &x) {
-    std::cout << "Draw object_t friend function\n";
+    std::cout << "draw object_t friend function\n";
     x.self_->draw_();
   }
 
 private:
-  struct DrawableInterface {
-    virtual ~DrawableInterface() = default;
-    virtual void draw_() const = 0;
-  };
-  template <typename type> struct DrawableModel : DrawableInterface {
-    DrawableModel(type x) : data_(std::move(x)) {}
-    void draw_() const { 
-      std::cout << "module draw function\n";
-      draw(data_);
-    }
-
-    type data_;
-  };
-
   std::shared_ptr<const DrawableInterface> self_;
 };
 
-void draw(const std::vector<object_t> &objects) {
+void drawVector(const std::vector<object_t> &objects) {
   std::cout << "<document>" << std::endl;
   for (auto &object : objects)
     draw(object);
@@ -66,7 +67,7 @@ int main() {
   document.emplace_back(0);
   document.emplace_back("Hello!");
   document.emplace_back(MyClass());
-  draw(document);
+  drawVector(document);
 
   return 0;
 }
